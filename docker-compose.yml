@@ -1,0 +1,30 @@
+version: "3.6" 
+services:
+  database:
+    image: postgres:9.6
+    environment:
+      POSTGRES_DB: seqdb_prod
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./1-init-schema.sql:/docker-entrypoint-initdb.d/1-init-schema.sql
+  api:
+    image: poffm/seqdb-api:dev-1.3.0-SNAPSHOT
+    environment:
+       spring.datasource.url: jdbc:postgresql://database:5432/seqdb_prod?currentSchema=seqdb
+       spring.datasource.username: seqdb_webapp
+       spring.datasource.password: changeme
+       spring.liquibase.user: seqdb_migration
+       spring.liquibase.password: changeme2
+       import-sample-accounts: "true"
+    ports:
+      - "8080:8080"
+  ui:
+    image: poffm/seqdb-ui:dev-1.0.0
+    ports:
+      - "3000:3000"
+  proxy:
+    image: nginx:1.15.7
+    volumes:
+      - "./proxy/:/etc/nginx/conf.d/"
+    ports:
+      - "80:80"
